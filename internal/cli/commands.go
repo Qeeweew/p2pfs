@@ -175,11 +175,10 @@ var lsCmd = &cobra.Command{
 		}
 		node, err := dag.DecodeNode(blk.RawData())
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "ls failed: %v\n", err)
-			os.Exit(1)
+			return
 		}
 		for _, link := range node.Links() {
-			fmt.Printf("%s\t%s\n", link.Name, link.Cid)
+			cmd.Printf("%s\t%s\n", link.Name, link.Cid)
 		}
 	},
 }

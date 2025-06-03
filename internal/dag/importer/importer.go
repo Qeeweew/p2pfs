@@ -32,5 +32,5 @@ func ImportFile(ctx context.Context, path string, bs blockstore.Blockstore) (cid
 	if err := bs.Put(ctx, blk); err != nil {
 		return cid.Undef, err
 	}
-	return node.Cid(), nil
+	return blk.Cid(), nil
 }

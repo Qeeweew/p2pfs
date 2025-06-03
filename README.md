@@ -62,7 +62,7 @@ A Go implementation of a P2P file system inspired by IPFS. This project demonstr
 - [x] Create Merkle-DAG node generation and file import/export  
 - [x] Integrate libp2p host, streams, and protocol handlers  
 - [x] Implement Kademlia DHT for peer routing and provider records  
-- [ ] Build Bitswap engine for efficient block exchange  
+- [x] Build Bitswap engine for efficient block exchange  
 - [ ] Add CLI commands: `add`, `get`, `pin`, `cat`, `ls`  
 - [ ] Write comprehensive unit and integration tests  
 - [ ] Prepare user documentation and usage examples  

@@ -55,8 +55,8 @@ A Go implementation of a P2P file system inspired by IPFS. This project demonstr
 
 ## TODO
 
-- [ ] Implement `datastore` with bbolt backend  
-- [ ] Develop `blockstore` for block encoding/decoding  
+- [x] Implement `datastore` with bbolt backend  
+- [x] Develop `blockstore` for block encoding/decoding  
 - [ ] Create Merkle-DAG node generation and file import/export  
 - [ ] Integrate libp2p host, streams, and protocol handlers  
 - [ ] Implement Kademlia DHT for peer routing and provider records  

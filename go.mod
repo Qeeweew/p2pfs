@@ -8,6 +8,8 @@ require (
 	github.com/ipfs/go-block-format v0.2.1
 	github.com/ipfs/go-cid v0.5.0
 	go.etcd.io/bbolt v1.3.8
+	github.com/ipld/go-ipld-prime v0.14.0
+	github.com/ipfs/go-merkledag v0.2.2
 )
 
 require (

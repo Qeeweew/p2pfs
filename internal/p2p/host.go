@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	libp2p "github.com/libp2p/go-libp2p"
-	corehost "github.com/libp2p/go-libp2p-core/host"
+	corehost "github.com/libp2p/go-libp2p/core/host"
 )
 
 // NewHost initializes a libp2p host listening on the given TCP port.

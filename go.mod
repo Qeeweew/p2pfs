@@ -11,6 +11,7 @@ require (
 	github.com/libp2p/go-libp2p v0.41.1
 	github.com/libp2p/go-libp2p-kad-dht v0.32.0
 	go.etcd.io/bbolt v1.3.8
+	github.com/spf13/cobra v1.9.0
 )
 
 require (

@@ -35,10 +35,7 @@ func TestBboltBlockstore_PutGetDeleteHas(t *testing.T) {
 
 	// create a block
 	data := []byte("hello blockstore")
-	blk, err := blockformat.NewBlock(data)
-	if err != nil {
-		t.Fatal(err)
-	}
+	blk := blockformat.NewBlock(data)
 	cid := blk.Cid()
 
 	// ensure not present

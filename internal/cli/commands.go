@@ -1,9 +1,22 @@
 package cli
 
 import (
+	"bufio"
+	"context"
 	"fmt"
+	"os"
 
+	"github.com/ipfs/go-cid"
 	"github.com/spf13/cobra"
+
+	"p2pfs/internal/bitswap"
+	"p2pfs/internal/blockstore"
+	"p2pfs/internal/dag"
+	"p2pfs/internal/dag/exporter"
+	"p2pfs/internal/dag/importer"
+	"p2pfs/internal/datastore"
+	"p2pfs/internal/p2p"
+	"p2pfs/internal/routing"
 )
 
 // RootCmd is the base command for the p2pfs CLI.
@@ -21,7 +34,22 @@ var addCmd = &cobra.Command{
 	Short: "Add a file to the P2P file system",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("add command not implemented")
+		dbPath := "p2pfs.db"
+		ds, err := datastore.NewBboltDatastore(dbPath, 0600, nil)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "failed to open datastore: %v\n", err)
+			os.Exit(1)
+		}
+		defer ds.Close()
+		bs := blockstore.NewBboltBlockstore(ds)
+		defer bs.Close()
+
+		cidKey, err := importer.ImportFile(context.Background(), args[0], bs)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "add failed: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Println(cidKey.String())
 	},
 }
 
@@ -30,7 +58,25 @@ var getCmd = &cobra.Command{
 	Short: "Retrieve a file by CID",
 	Args:  cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("get command not implemented")
+		dbPath := "p2pfs.db"
+		ds, err := datastore.NewBboltDatastore(dbPath, 0600, nil)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "failed to open datastore: %v\n", err)
+			os.Exit(1)
+		}
+		defer ds.Close()
+		bs := blockstore.NewBboltBlockstore(ds)
+		defer bs.Close()
+
+		cidKey, err := cid.Parse(args[0])
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "invalid cid: %v\n", err)
+			os.Exit(1)
+		}
+		if err := exporter.ExportFile(context.Background(), cidKey, bs, args[1]); err != nil {
+			fmt.Fprintf(os.Stderr, "get failed: %v\n", err)
+			os.Exit(1)
+		}
 	},
 }
 
@@ -39,7 +85,38 @@ var pinCmd = &cobra.Command{
 	Short: "Pin a block locally",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("pin command not implemented")
+		dbPath := "p2pfs.db"
+		ds, err := datastore.NewBboltDatastore(dbPath, 0600, nil)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "failed to open datastore: %v\n", err)
+			os.Exit(1)
+		}
+		defer ds.Close()
+		bs := blockstore.NewBboltBlockstore(ds)
+		defer bs.Close()
+
+		cidKey, err := cid.Parse(args[0])
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "invalid cid: %v\n", err)
+			os.Exit(1)
+		}
+
+		host, err := p2p.NewHost(context.Background(), 0)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "failed to create host: %v\n", err)
+			os.Exit(1)
+		}
+		dht, err := routing.NewKademliaDHT(context.Background(), host)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "failed to create dht: %v\n", err)
+			os.Exit(1)
+		}
+		bsEngine := bitswap.NewBitswap(host, dht, bs)
+		if err := bsEngine.ProvideBlock(context.Background(), cidKey); err != nil {
+			fmt.Fprintf(os.Stderr, "pin failed: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Println("pinned", cidKey.String())
 	},
 }
 
@@ -48,7 +125,27 @@ var catCmd = &cobra.Command{
 	Short: "Print block raw data",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("cat command not implemented")
+		dbPath := "p2pfs.db"
+		ds, err := datastore.NewBboltDatastore(dbPath, 0600, nil)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "failed to open datastore: %v\n", err)
+			os.Exit(1)
+		}
+		defer ds.Close()
+		bs := blockstore.NewBboltBlockstore(ds)
+		defer bs.Close()
+
+		cidKey, err := cid.Parse(args[0])
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "invalid cid: %v\n", err)
+			os.Exit(1)
+		}
+		blk, err := bs.Get(context.Background(), cidKey)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "cat failed: %v\n", err)
+			os.Exit(1)
+		}
+		os.Stdout.Write(blk.RawData())
 	},
 }
 
@@ -57,6 +154,33 @@ var lsCmd = &cobra.Command{
 	Short: "List links in a DAG node",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("ls command not implemented")
+		dbPath := "p2pfs.db"
+		ds, err := datastore.NewBboltDatastore(dbPath, 0600, nil)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "failed to open datastore: %v\n", err)
+			os.Exit(1)
+		}
+		defer ds.Close()
+		bs := blockstore.NewBboltBlockstore(ds)
+		defer bs.Close()
+
+		cidKey, err := cid.Parse(args[0])
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "invalid cid: %v\n", err)
+			os.Exit(1)
+		}
+		blk, err := bs.Get(context.Background(), cidKey)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "ls failed: %v\n", err)
+			os.Exit(1)
+		}
+		node, err := dag.DecodeNode(blk.RawData())
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "ls failed: %v\n", err)
+			os.Exit(1)
+		}
+		for _, link := range node.Links() {
+			fmt.Printf("%s\t%s\n", link.Name, link.Cid)
+		}
 	},
 }

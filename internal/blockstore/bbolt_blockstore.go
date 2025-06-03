@@ -43,7 +43,7 @@ func (b *BboltBlockstore) Delete(ctx context.Context, id cid.Cid) error {
 func (b *BboltBlockstore) Has(ctx context.Context, id cid.Cid) (bool, error) {
     data, err := b.ds.Get(ctx, bucketName, id.Bytes())
     if err != nil {
-        if err.Error() == "key not found" {
+        if err.Error() == "key not found" || err.Error() == "bucket not found" {
             return false, nil
         }
         return false, err

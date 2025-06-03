@@ -48,7 +48,7 @@ var addCmd = &cobra.Command{
 			fmt.Fprintf(os.Stderr, "add failed: %v\n", err)
 			os.Exit(1)
 		}
-		fmt.Println(cidKey.String())
+		cmd.Println(cidKey.String())
 	},
 }
 
@@ -144,7 +144,7 @@ var catCmd = &cobra.Command{
 			fmt.Fprintf(os.Stderr, "cat failed: %v\n", err)
 			os.Exit(1)
 		}
-		os.Stdout.Write(blk.RawData())
+		cmd.Print(string(blk.RawData()))
 	},
 }
 

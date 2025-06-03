@@ -3,7 +3,7 @@ package blockstore
 import (
     "context"
 
-    "github.com/ipfs/go-block-format"
+    blockformat "github.com/ipfs/go-block-format"
     "github.com/ipfs/go-cid"
 )
 

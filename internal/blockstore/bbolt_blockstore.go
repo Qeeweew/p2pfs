@@ -2,7 +2,6 @@ package blockstore
 
 import (
     "context"
-    "fmt"
 
     blockformat "github.com/ipfs/go-block-format"
     "github.com/ipfs/go-cid"
@@ -33,10 +32,7 @@ func (b *BboltBlockstore) Get(ctx context.Context, id cid.Cid) (blockformat.Bloc
     if err != nil {
         return nil, err
     }
-    blk, err := blockformat.Decode(data)
-    if err != nil {
-        return nil, fmt.Errorf("failed to decode block: %w", err)
-    }
+    blk := blockformat.NewBlock(data)
     return blk, nil
 }
 

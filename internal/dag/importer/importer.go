@@ -7,7 +7,6 @@ import (
 
 	"github.com/ipfs/go-cid"
 	blockformat "github.com/ipfs/go-block-format"
-	merkledag "github.com/ipfs/go-merkledag"
 
 	"p2pfs/internal/blockstore"
 )

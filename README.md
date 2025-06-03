@@ -33,6 +33,8 @@ A Go implementation of a P2P file system inspired by IPFS. This project demonstr
 │   ├── blockstore/      # Blockstore interfaces and implementations
 │   ├── datastore/       # Persistent key-value datastore abstraction
 │   ├── dag/             # Merkle-DAG node creation and traversal
+│   ├── importer/        # File import logic
+│   ├── exporter/        # File export logic
 │   ├── p2p/             # libp2p host setup and protocol handlers
 │   ├── routing/         # DHT peer routing and discovery
 │   ├── bitswap/         # Bitswap session management and message handling

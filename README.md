@@ -21,7 +21,7 @@ A Go implementation of a P2P file system inspired by IPFS. This project demonstr
 
 - **Blockstore & Datastore**  
   Blockstore: in-memory or on-disk block storage interface.  
-  Datastore: key-value backend (e.g., BoltDB) for persistent block storage.
+  Datastore: key-value backend using bbolt (github.com/etcd-io/bbolt) for persistent block storage.
 
 ## Project Structure
 
@@ -55,7 +55,7 @@ A Go implementation of a P2P file system inspired by IPFS. This project demonstr
 
 ## TODO
 
-- [ ] Implement `datastore` with BoltDB backend  
+- [ ] Implement `datastore` with bbolt backend  
 - [ ] Develop `blockstore` for block encoding/decoding  
 - [ ] Create Merkle-DAG node generation and file import/export  
 - [ ] Integrate libp2p host, streams, and protocol handlers  

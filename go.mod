@@ -9,6 +9,8 @@ require (
 	github.com/ipfs/go-cid v0.5.0
 	github.com/ipfs/go-merkledag v0.11.0
 	go.etcd.io/bbolt v1.3.8
+	github.com/libp2p/go-libp2p v0.30.0
+	github.com/libp2p/go-libp2p-core v0.12.0
 )
 
 require (

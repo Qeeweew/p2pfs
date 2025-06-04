@@ -135,9 +135,12 @@ var serveCmd = &cobra.Command{
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
-			mnode, err := merkledag.DecodeProtobuf(blk.RawData())
+			nodeProto, err := merkledag.DecodeProtobuf(blk.RawData())
+			var mnode merkledag.Node
 			if err != nil {
 				mnode = merkledag.NewRawNode(blk.RawData())
+			} else {
+				mnode = nodeProto
 			}
 			links := make([]map[string]string, len(mnode.Links()))
 			for i, link := range mnode.Links() {

@@ -136,7 +136,11 @@
                           URL.revokeObjectURL(url);
                       });
                 };
-                li.innerText = `${name} (` + cid + `) `;
+                if (name === cid) {
+                    li.innerText = cid + " ";
+                } else {
+                    li.innerText = `${name} (${cid}) `;
+                }
                 li.appendChild(btn);
                 list.appendChild(li);
             }

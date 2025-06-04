@@ -206,7 +206,15 @@ var demoCmd = &cobra.Command{
 			fmt.Fprintf(os.Stderr, "nodeA host error: %v\n", err)
 			os.Exit(1)
 		}
-		dhtA, _ := routing.NewKademliaDHT(ctx, hostA)
+		dhtA, err := routing.NewKademliaDHT(ctx, hostA)
+		if err != nil {
+		    fmt.Fprintf(os.Stderr, "nodeA dht error: %v\n", err)
+		    os.Exit(1)
+		}
+		if err := dhtA.Bootstrap(ctx); err != nil {
+		    fmt.Fprintf(os.Stderr, "nodeA bootstrap error: %v\n", err)
+		    os.Exit(1)
+		}
 		bsEngA := bitswap.NewBitswap(hostA, dhtA, bsA)
 
 		// setup node B
@@ -224,7 +232,15 @@ var demoCmd = &cobra.Command{
 			fmt.Fprintf(os.Stderr, "nodeB host error: %v\n", err)
 			os.Exit(1)
 		}
-		dhtB, _ := routing.NewKademliaDHT(ctx, hostB)
+		dhtB, err := routing.NewKademliaDHT(ctx, hostB)
+		if err != nil {
+		    fmt.Fprintf(os.Stderr, "nodeB dht error: %v\n", err)
+		    os.Exit(1)
+		}
+		if err := dhtB.Bootstrap(ctx); err != nil {
+		    fmt.Fprintf(os.Stderr, "nodeB bootstrap error: %v\n", err)
+		    os.Exit(1)
+		}
 		bsEngB := bitswap.NewBitswap(hostB, dhtB, bsB)
 
 		// connect B → A

@@ -13,6 +13,8 @@ import (
 
 	"p2pfs/internal/blockstore"
 	"p2pfs/internal/routing"
+
+	"github.com/libp2p/go-libp2p/core/peer"
 )
 
 const BitswapProtocol = "/p2pfs/bitswap/1.0.0"
@@ -45,6 +47,12 @@ func (b *Bitswap) GetBlock(ctx context.Context, cidKey cid.Cid) (blockformat.Blo
 	providers, err := b.dht.FindProviders(ctx, cidKey, 10)
 	if err != nil {
 		return nil, err
+	}
+	// fallback to directly connected peers if no providers found via DHT
+	if len(providers) == 0 {
+		for _, pid := range b.host.Peerstore().Peers() {
+			providers = append(providers, peer.AddrInfo{ID: pid, Addrs: b.host.Peerstore().Addrs(pid)})
+		}
 	}
 	// Query each provider
 	for _, pi := range providers {

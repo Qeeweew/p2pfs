@@ -136,13 +136,14 @@ var serveCmd = &cobra.Command{
 				return
 			}
 			nodeProto, err := merkledag.DecodeProtobuf(blk.RawData())
+			var links []map[string]string
 			if err != nil {
-				http.Error(w, "cannot list links on raw block", http.StatusBadRequest)
-				return
-			}
-			links := make([]map[string]string, len(nodeProto.Links()))
-			for i, link := range nodeProto.Links() {
-				links[i] = map[string]string{"name": link.Name, "cid": link.Cid.String()}
+				links = []map[string]string{}
+			} else {
+				links = make([]map[string]string, len(nodeProto.Links()))
+				for i, link := range nodeProto.Links() {
+					links[i] = map[string]string{"name": link.Name, "cid": link.Cid.String()}
+				}
 			}
 			w.Header().Set("Content-Type", "application/json")
 			json.NewEncoder(w).Encode(links)

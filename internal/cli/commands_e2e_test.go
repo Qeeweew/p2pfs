@@ -69,4 +69,27 @@ func TestCLIAddCatLs(t *testing.T) {
 	if strings.TrimSpace(buf.String()) != "" {
 		t.Fatalf("expected empty ls output, got '%s'", buf.String())
 	}
+
+	// Run `p2pfs demo` to show P2P file sharing
+	buf.Reset()
+	RootCmd.SetOut(buf)
+	RootCmd.SetErr(buf)
+	RootCmd.SetArgs([]string{"demo", inputFile})
+	if err := RootCmd.Execute(); err != nil {
+		t.Fatalf("demo failed: %v", err)
+	}
+	out := buf.String()
+	if !strings.Contains(out, "Demo completed. Node B stored file at ") {
+		t.Fatalf("unexpected demo output: %s", out)
+	}
+	// Extract output path and verify content
+	fields := strings.Fields(out)
+	demoPath := fields[len(fields)-1]
+	data, err := os.ReadFile(demoPath)
+	if err != nil {
+		t.Fatalf("cannot read demo file: %v", err)
+	}
+	if string(data) != "hello e2e" {
+		t.Fatalf("expected demo file content 'hello e2e', got '%s'", string(data))
+	}
 }

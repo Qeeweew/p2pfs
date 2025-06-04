@@ -16,6 +16,7 @@ import (
 	"p2pfs/internal/bitswap"
 	"p2pfs/internal/blockstore"
 	"p2pfs/internal/dag"
+	"github.com/ipfs/go-merkledag"
 	"p2pfs/internal/dag/exporter"
 	"p2pfs/internal/dag/importer"
 	"p2pfs/internal/datastore"
@@ -134,13 +135,13 @@ var serveCmd = &cobra.Command{
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
-			node, err := dag.DecodeNode(blk.RawData())
+			var mnode merkledag.Node
+			mnode, err := merkledag.DecodeProtobuf(blk.RawData())
 			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
+				mnode = merkledag.NewRawNode(blk.RawData())
 			}
-			links := make([]map[string]string, len(node.Links()))
-			for i, link := range node.Links() {
+			links := make([]map[string]string, len(mnode.Links()))
+			for i, link := range mnode.Links() {
 				links[i] = map[string]string{"name": link.Name, "cid": link.Cid.String()}
 			}
 			w.Header().Set("Content-Type", "application/json")

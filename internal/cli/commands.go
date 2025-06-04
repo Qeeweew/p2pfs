@@ -3,6 +3,7 @@ package cli
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"os"
 	"path/filepath"
 
@@ -51,6 +52,19 @@ var addCmd = &cobra.Command{
 			os.Exit(1)
 		}
 		cmd.Println(cidKey.String())
+	},
+}
+
+var serveCmd = &cobra.Command{
+	Use:   "serve",
+	Short: "Start HTTP web interface",
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println("Starting web server on :8080")
+		http.Handle("/", http.FileServer(http.Dir("web")))
+		if err := http.ListenAndServe(":8080", nil); err != nil {
+			fmt.Fprintf(os.Stderr, "server error: %v\n", err)
+			os.Exit(1)
+		}
 	},
 }
 

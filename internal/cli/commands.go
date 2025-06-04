@@ -136,15 +136,14 @@ var serveCmd = &cobra.Command{
 				return
 			}
 			nodeProto, err := merkledag.DecodeProtobuf(blk.RawData())
-			var mnode merkledag.Node
-			if err != nil {
-				mnode = merkledag.NewRawNode(blk.RawData())
+			var links []map[string]string
+			if err == nil {
+				links = make([]map[string]string, len(nodeProto.Links()))
+				for i, link := range nodeProto.Links() {
+					links[i] = map[string]string{"name": link.Name, "cid": link.Cid.String()}
+				}
 			} else {
-				mnode = nodeProto
-			}
-			links := make([]map[string]string, len(mnode.Links()))
-			for i, link := range mnode.Links() {
-				links[i] = map[string]string{"name": link.Name, "cid": link.Cid.String()}
+				links = []map[string]string{}
 			}
 			w.Header().Set("Content-Type", "application/json")
 			json.NewEncoder(w).Encode(links)

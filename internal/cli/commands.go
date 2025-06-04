@@ -161,6 +161,16 @@ var serveCmd = &cobra.Command{
 			}
 			w.Header().Set("Content-Type", "application/octet-stream")
 			w.Write(blk.RawData())
+
+			// record fetched block into shared metadata
+			if _, exists := sharedFiles[cidStr]; !exists {
+				sharedFiles[cidStr] = cidStr
+				if metaBytes, err := json.Marshal(sharedFiles); err != nil {
+					log.Printf("failed to marshal shared metadata after fetch: %v", err)
+				} else if err := ds.Put(context.Background(), metadataBucket, []byte("shared_meta"), metaBytes); err != nil {
+					log.Printf("failed to persist shared metadata after fetch: %v", err)
+				}
+			}
 		})
 
 		mux.HandleFunc("/api/ls", func(w http.ResponseWriter, r *http.Request) {

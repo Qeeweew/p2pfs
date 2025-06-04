@@ -76,6 +76,20 @@ Examples:
 ./p2pfs demo <path-to-file>
 ```
 
+Web Frontend
+
+To launch a simple web UI:
+
+1. 构建并启动服务：
+   ```bash
+   go build -o p2pfs ./cmd/p2pfs
+   ./p2pfs serve
+   ```
+2. 在浏览器中打开：  
+   http://localhost:8080/
+
+服务器会在 `web/` 目录下提供静态页面（`index.html`），并通过 `/api/...` 路由调用 CLI 底层功能。
+
 ## TODO
 
 - [x] Implement `datastore` with bbolt backend  

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"net/http"
 
 	"github.com/ipfs/go-cid"
 	"github.com/libp2p/go-libp2p/core/peer"
@@ -27,7 +28,7 @@ var RootCmd = &cobra.Command{
 }
 
 func init() {
-	RootCmd.AddCommand(addCmd, getCmd, pinCmd, catCmd, lsCmd, demoCmd)
+	RootCmd.AddCommand(addCmd, getCmd, pinCmd, catCmd, lsCmd, demoCmd, serveCmd)
 }
 
 var addCmd = &cobra.Command{

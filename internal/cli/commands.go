@@ -256,8 +256,7 @@ var demoCmd = &cobra.Command{
 			os.Exit(1)
 		}
 		if err := bsEngA.ProvideBlock(ctx, cidKey); err != nil {
-			fmt.Fprintf(os.Stderr, "provide error: %v\n", err)
-			os.Exit(1)
+			fmt.Fprintf(os.Stderr, "provide warning: %v\n", err)
 		}
 
 		// fetch on B

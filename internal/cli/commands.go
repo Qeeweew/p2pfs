@@ -206,9 +206,9 @@ var demoCmd = &cobra.Command{
 			fmt.Fprintf(os.Stderr, "nodeA host error: %v\n", err)
 			os.Exit(1)
 		}
-		fmt.Println("Node A ID:", hostA.ID().Pretty())
+		fmt.Println("Node A ID:", hostA.ID().String())
 		for _, addr := range hostA.Addrs() {
-			fmt.Printf("Node A address: %s/p2p/%s\n", addr.String(), hostA.ID().Pretty())
+			fmt.Printf("Node A address: %s/p2p/%s\n", addr.String(), hostA.ID().String())
 		}
 		dhtA, err := routing.NewKademliaDHT(ctx, hostA)
 		if err != nil {
@@ -236,9 +236,9 @@ var demoCmd = &cobra.Command{
 			fmt.Fprintf(os.Stderr, "nodeB host error: %v\n", err)
 			os.Exit(1)
 		}
-		fmt.Println("Node B ID:", hostB.ID().Pretty())
+		fmt.Println("Node B ID:", hostB.ID().String())
 		for _, addr := range hostB.Addrs() {
-			fmt.Printf("Node B address: %s/p2p/%s\n", addr.String(), hostB.ID().Pretty())
+			fmt.Printf("Node B address: %s/p2p/%s\n", addr.String(), hostB.ID().String())
 		}
 		dhtB, err := routing.NewKademliaDHT(ctx, hostB)
 		if err != nil {

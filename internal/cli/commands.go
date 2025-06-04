@@ -34,6 +34,7 @@ var RootCmd = &cobra.Command{
 
 func init() {
 	RootCmd.AddCommand(addCmd, getCmd, pinCmd, catCmd, lsCmd, demoCmd, serveCmd)
+	serveCmd.Flags().IntVarP(&servePort, "port", "p", 8080, "port to serve on")
 }
 
 var addCmd = &cobra.Command{
@@ -60,11 +61,13 @@ var addCmd = &cobra.Command{
 	},
 }
 
+var servePort int
+
 var serveCmd = &cobra.Command{
 	Use:   "serve",
 	Short: "Start HTTP web interface",
 	Run: func(cmd *cobra.Command, args []string) {
-		log.Println("Starting web server on :8080")
+		log.Printf("Starting web server on :%d", servePort)
 		// initialize datastore and blockstore
 		dbPath := "p2pfs.db"
 		ds, err := datastore.NewBboltDatastore(dbPath, 0600, nil)
@@ -213,7 +216,7 @@ var serveCmd = &cobra.Command{
 			w.Write(blk.RawData())
 		})
 
-		if err := http.ListenAndServe(":8080", mux); err != nil {
+		if err := http.ListenAndServe(fmt.Sprintf(":%d", servePort), mux); err != nil {
 			fmt.Fprintf(os.Stderr, "server error: %v\n", err)
 			os.Exit(1)
 		}

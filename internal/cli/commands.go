@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"net/http"
 
 	"github.com/ipfs/go-cid"
 	"github.com/libp2p/go-libp2p/core/peer"
@@ -28,7 +27,7 @@ var RootCmd = &cobra.Command{
 }
 
 func init() {
-	RootCmd.AddCommand(addCmd, getCmd, pinCmd, catCmd, lsCmd, demoCmd, serveCmd)
+	RootCmd.AddCommand(addCmd, getCmd, pinCmd, catCmd, lsCmd, demoCmd)
 }
 
 var addCmd = &cobra.Command{
@@ -213,12 +212,12 @@ var demoCmd = &cobra.Command{
 		}
 		dhtA, err := routing.NewKademliaDHT(ctx, hostA)
 		if err != nil {
-		    fmt.Fprintf(os.Stderr, "nodeA dht error: %v\n", err)
-		    os.Exit(1)
+			fmt.Fprintf(os.Stderr, "nodeA dht error: %v\n", err)
+			os.Exit(1)
 		}
 		if err := dhtA.Bootstrap(ctx); err != nil {
-		    fmt.Fprintf(os.Stderr, "nodeA bootstrap error: %v\n", err)
-		    os.Exit(1)
+			fmt.Fprintf(os.Stderr, "nodeA bootstrap error: %v\n", err)
+			os.Exit(1)
 		}
 		bsEngA := bitswap.NewBitswap(hostA, dhtA, bsA)
 
@@ -243,12 +242,12 @@ var demoCmd = &cobra.Command{
 		}
 		dhtB, err := routing.NewKademliaDHT(ctx, hostB)
 		if err != nil {
-		    fmt.Fprintf(os.Stderr, "nodeB dht error: %v\n", err)
-		    os.Exit(1)
+			fmt.Fprintf(os.Stderr, "nodeB dht error: %v\n", err)
+			os.Exit(1)
 		}
 		if err := dhtB.Bootstrap(ctx); err != nil {
-		    fmt.Fprintf(os.Stderr, "nodeB bootstrap error: %v\n", err)
-		    os.Exit(1)
+			fmt.Fprintf(os.Stderr, "nodeB bootstrap error: %v\n", err)
+			os.Exit(1)
 		}
 		bsEngB := bitswap.NewBitswap(hostB, dhtB, bsB)
 

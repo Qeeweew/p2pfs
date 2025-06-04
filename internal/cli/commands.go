@@ -206,6 +206,10 @@ var demoCmd = &cobra.Command{
 			fmt.Fprintf(os.Stderr, "nodeA host error: %v\n", err)
 			os.Exit(1)
 		}
+		fmt.Println("Node A ID:", hostA.ID().Pretty())
+		for _, addr := range hostA.Addrs() {
+			fmt.Printf("Node A address: %s/p2p/%s\n", addr.String(), hostA.ID().Pretty())
+		}
 		dhtA, err := routing.NewKademliaDHT(ctx, hostA)
 		if err != nil {
 		    fmt.Fprintf(os.Stderr, "nodeA dht error: %v\n", err)
@@ -232,6 +236,10 @@ var demoCmd = &cobra.Command{
 			fmt.Fprintf(os.Stderr, "nodeB host error: %v\n", err)
 			os.Exit(1)
 		}
+		fmt.Println("Node B ID:", hostB.ID().Pretty())
+		for _, addr := range hostB.Addrs() {
+			fmt.Printf("Node B address: %s/p2p/%s\n", addr.String(), hostB.ID().Pretty())
+		}
 		dhtB, err := routing.NewKademliaDHT(ctx, hostB)
 		if err != nil {
 		    fmt.Fprintf(os.Stderr, "nodeB dht error: %v\n", err)
@@ -248,6 +256,7 @@ var demoCmd = &cobra.Command{
 			fmt.Fprintf(os.Stderr, "connect error: %v\n", err)
 			os.Exit(1)
 		}
+		fmt.Println("Node B connected to Node A")
 
 		// import & provide on A
 		cidKey, err := importer.ImportFile(ctx, args[0], bsA)

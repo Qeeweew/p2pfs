@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"encoding/json"
+	"io"
 	"os"
 	"path/filepath"
 
@@ -60,8 +62,91 @@ var serveCmd = &cobra.Command{
 	Short: "Start HTTP web interface",
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("Starting web server on :8080")
-		http.Handle("/", http.FileServer(http.Dir("web")))
-		if err := http.ListenAndServe(":8080", nil); err != nil {
+		// initialize datastore and blockstore
+		dbPath := "p2pfs.db"
+		ds, err := datastore.NewBboltDatastore(dbPath, 0600, nil)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "datastore error: %v\n", err)
+			os.Exit(1)
+		}
+		defer ds.Close()
+		bs := blockstore.NewBboltBlockstore(ds)
+		defer bs.Close()
+
+		mux := http.NewServeMux()
+		mux.Handle("/", http.FileServer(http.Dir("web")))
+
+		mux.HandleFunc("/api/add", func(w http.ResponseWriter, r *http.Request) {
+			if r.Method != http.MethodPost {
+				http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+				return
+			}
+			file, _, err := r.FormFile("file")
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+			defer file.Close()
+			tmp, err := os.CreateTemp("", "upload-*")
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			defer os.Remove(tmp.Name())
+			defer tmp.Close()
+			if _, err := io.Copy(tmp, file); err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			cidKey, err := importer.ImportFile(context.Background(), tmp.Name(), bs)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			json.NewEncoder(w).Encode(map[string]string{"cid": cidKey.String()})
+		})
+
+		mux.HandleFunc("/api/cat", func(w http.ResponseWriter, r *http.Request) {
+			cidStr := r.URL.Query().Get("cid")
+			cidKey, err := cid.Parse(cidStr)
+			if err != nil {
+				http.Error(w, "invalid cid", http.StatusBadRequest)
+				return
+			}
+			blk, err := bs.Get(context.Background(), cidKey)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			w.Header().Set("Content-Type", "application/octet-stream")
+			w.Write(blk.RawData())
+		})
+
+		mux.HandleFunc("/api/ls", func(w http.ResponseWriter, r *http.Request) {
+			cidStr := r.URL.Query().Get("cid")
+			cidKey, err := cid.Parse(cidStr)
+			if err != nil {
+				http.Error(w, "invalid cid", http.StatusBadRequest)
+				return
+			}
+			blk, err := bs.Get(context.Background(), cidKey)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			node, err := dag.DecodeNode(blk.RawData())
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			links := make([]map[string]string, len(node.Links()))
+			for i, link := range node.Links() {
+				links[i] = map[string]string{"name": link.Name, "cid": link.Cid.String()}
+			}
+			json.NewEncoder(w).Encode(links)
+		})
+
+		if err := http.ListenAndServe(":8080", mux); err != nil {
 			fmt.Fprintf(os.Stderr, "server error: %v\n", err)
 			os.Exit(1)
 		}

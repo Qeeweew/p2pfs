@@ -7,11 +7,43 @@
 <body>
     <h1>p2pfs Web Interface</h1>
     <div id="app">
-        <!-- UI elements will go here -->
+        <h2>Add File</h2>
+        <input type="file" id="fileInput" />
+        <button id="addBtn">Add</button>
+        <p id="cidResult"></p>
+        <h2>Cat File</h2>
+        <input type="text" id="cidInput" placeholder="CID" />
+        <button id="catBtn">Cat</button>
+        <pre id="catResult"></pre>
+        <h2>List Links</h2>
+        <input type="text" id="lsCidInput" placeholder="CID" />
+        <button id="lsBtn">LS</button>
+        <pre id="lsResult"></pre>
     </div>
     <script>
-        // Example: fetch('/api/add?file=...') etc.
-        console.log('Web UI placeholder');
+        document.getElementById('addBtn').addEventListener('click', async () => {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            const form = new FormData();
+            form.append('file', file);
+            const res = await fetch('/api/add', { method: 'POST', body: form });
+            const data = await res.json();
+            document.getElementById('cidResult').innerText = 'CID: ' + data.cid;
+        });
+
+        document.getElementById('catBtn').addEventListener('click', async () => {
+            const cid = document.getElementById('cidInput').value;
+            const res = await fetch('/api/cat?cid=' + cid);
+            const text = await res.text();
+            document.getElementById('catResult').innerText = text;
+        });
+
+        document.getElementById('lsBtn').addEventListener('click', async () => {
+            const cid = document.getElementById('lsCidInput').value;
+            const res = await fetch('/api/ls?cid=' + cid);
+            const data = await res.json();
+            document.getElementById('lsResult').innerText = JSON.stringify(data, null, 2);
+        });
     </script>
 </body>
 </html>

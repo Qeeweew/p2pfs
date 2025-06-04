@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"log"
 	"fmt"
 	"net/http"
 	"encoding/json"
@@ -63,7 +64,7 @@ var serveCmd = &cobra.Command{
 	Use:   "serve",
 	Short: "Start HTTP web interface",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Starting web server on :8080")
+		log.Println("Starting web server on :8080")
 		// initialize datastore and blockstore
 		dbPath := "p2pfs.db"
 		ds, err := datastore.NewBboltDatastore(dbPath, 0600, nil)
@@ -91,9 +92,9 @@ var serveCmd = &cobra.Command{
 		}
 		bsEngine := bitswap.NewBitswap(host, dhtEngine, bs)
 		// print this node's Peer ID and multiaddrs for P2P connections
-		fmt.Println("Node ID:", host.ID().String())
+		log.Printf("Node ID: %s", host.ID().String())
 		for _, addr := range host.Addrs() {
-			fmt.Printf("Node address: %s/p2p/%s\n", addr.String(), host.ID().String())
+			log.Printf("Node address: %s/p2p/%s", addr.String(), host.ID().String())
 		}
 
 		mux := http.NewServeMux()

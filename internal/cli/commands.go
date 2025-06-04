@@ -102,6 +102,27 @@ var serveCmd = &cobra.Command{
 		}
 
 		mux := http.NewServeMux()
+
+		sharedDir := "shared"
+		if err := os.MkdirAll(sharedDir, 0755); err != nil {
+		    log.Printf("failed to create shared folder: %v", err)
+		}
+		sharedFiles := make(map[string]string)
+		// preload existing shared files
+		if files, err := os.ReadDir(sharedDir); err == nil {
+		    for _, f := range files {
+		        if f.IsDir() {
+		            continue
+		        }
+		        fp := filepath.Join(sharedDir, f.Name())
+		        cidKey, err := importer.ImportFile(context.Background(), fp, bs)
+		        if err != nil {
+		            log.Printf("failed to import shared file %s: %v", fp, err)
+		            continue
+		        }
+		        sharedFiles[f.Name()] = cidKey.String()
+		    }
+		}
 		mux.Handle("/", http.FileServer(http.Dir("web")))
 
 		mux.HandleFunc("/api/add", func(w http.ResponseWriter, r *http.Request) {
@@ -109,7 +130,7 @@ var serveCmd = &cobra.Command{
 				http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 				return
 			}
-			file, _, err := r.FormFile("file")
+			file, fh, err := r.FormFile("file")
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusBadRequest)
 				return
@@ -132,6 +153,23 @@ var serveCmd = &cobra.Command{
 				return
 			}
 			json.NewEncoder(w).Encode(map[string]string{"cid": cidKey.String()})
+			// save uploaded file to shared folder
+			dstPath := filepath.Join(sharedDir, fh.Filename)
+			if _, err := tmp.Seek(0, io.SeekStart); err != nil {
+			    log.Printf("failed to seek temp file: %v", err)
+			} else {
+			    dst, err := os.Create(dstPath)
+			    if err != nil {
+			        log.Printf("failed to create shared file: %v", err)
+			    } else {
+			        if _, err := io.Copy(dst, tmp); err != nil {
+			            log.Printf("failed to copy to shared file: %v", err)
+			        } else {
+			            sharedFiles[fh.Filename] = cidKey.String()
+			        }
+			        dst.Close()
+			    }
+			}
 		})
 
 		mux.HandleFunc("/api/cat", func(w http.ResponseWriter, r *http.Request) {

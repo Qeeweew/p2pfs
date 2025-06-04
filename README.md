@@ -55,6 +55,27 @@ A Go implementation of a P2P file system inspired by IPFS. This project demonstr
    ./p2pfs --help
    ```
 
+## Usage
+
+Examples:
+
+```bash
+# Add a file to the P2P file system and print its CID
+./p2pfs add <path-to-file>
+
+# Retrieve and print the contents of a file by CID
+./p2pfs cat <CID>
+
+# List links in a DAG node by CID
+./p2pfs ls <CID>
+
+# Pin a block locally and announce it to the network
+./p2pfs pin <CID>
+
+# Demo P2P file sharing between two nodes
+./p2pfs demo <path-to-file>
+```
+
 ## TODO
 
 - [x] Implement `datastore` with bbolt backend  

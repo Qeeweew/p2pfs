@@ -99,6 +99,18 @@
             const blob = await res.blob();
             const text = await blob.text();
             document.getElementById('fetchResult').innerText = text;
+            // Prompt for download filename
+            const url = URL.createObjectURL(blob);
+            const defaultName = sharedMeta[cid] || cid;
+            const filename = prompt("Enter file name", defaultName);
+            if (filename) {
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                a.click();
+            }
+            URL.revokeObjectURL(url);
+            loadShared();
         });
 
         // Load shared files

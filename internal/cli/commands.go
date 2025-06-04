@@ -4,9 +4,11 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/ipfs/go-cid"
 	"github.com/spf13/cobra"
+	"github.com/libp2p/go-libp2p-core/peer"
 
 	"p2pfs/internal/bitswap"
 	"p2pfs/internal/blockstore"
@@ -25,7 +27,7 @@ var RootCmd = &cobra.Command{
 }
 
 func init() {
-	RootCmd.AddCommand(addCmd, getCmd, pinCmd, catCmd, lsCmd)
+	RootCmd.AddCommand(addCmd, getCmd, pinCmd, catCmd, lsCmd, demoCmd)
 }
 
 var addCmd = &cobra.Command{
@@ -180,5 +182,79 @@ var lsCmd = &cobra.Command{
 		for _, link := range node.Links() {
 			cmd.Printf("%s\t%s\n", link.Name, link.Cid)
 		}
+	},
+}
+
+var demoCmd = &cobra.Command{
+	Use:   "demo [file]",
+	Short: "Demo P2P file sharing between two nodes",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		ctx := context.Background()
+		// setup node A
+		dirA, _ := os.MkdirTemp("", "nodeA")
+		dsA, err := datastore.NewBboltDatastore(filepath.Join(dirA, "dbA.db"), 0600, nil)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "nodeA datastore error: %v\n", err)
+			os.Exit(1)
+		}
+		defer dsA.Close()
+		bsA := blockstore.NewBboltBlockstore(dsA)
+		defer bsA.Close()
+		hostA, err := p2p.NewHost(ctx, 0)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "nodeA host error: %v\n", err)
+			os.Exit(1)
+		}
+		dhtA, _ := routing.NewKademliaDHT(ctx, hostA)
+		bsEngA := bitswap.NewBitswap(hostA, dhtA, bsA)
+
+		// setup node B
+		dirB, _ := os.MkdirTemp("", "nodeB")
+		dsB, err := datastore.NewBboltDatastore(filepath.Join(dirB, "dbB.db"), 0600, nil)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "nodeB datastore error: %v\n", err)
+			os.Exit(1)
+		}
+		defer dsB.Close()
+		bsB := blockstore.NewBboltBlockstore(dsB)
+		defer bsB.Close()
+		hostB, err := p2p.NewHost(ctx, 0)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "nodeB host error: %v\n", err)
+			os.Exit(1)
+		}
+		dhtB, _ := routing.NewKademliaDHT(ctx, hostB)
+		bsEngB := bitswap.NewBitswap(hostB, dhtB, bsB)
+
+		// connect B → A
+		if err := hostB.Connect(ctx, peer.AddrInfo{ID: hostA.ID(), Addrs: hostA.Addrs()}); err != nil {
+			fmt.Fprintf(os.Stderr, "connect error: %v\n", err)
+			os.Exit(1)
+		}
+
+		// import & provide on A
+		cidKey, err := importer.ImportFile(ctx, args[0], bsA)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "import error: %v\n", err)
+			os.Exit(1)
+		}
+		if err := bsEngA.ProvideBlock(ctx, cidKey); err != nil {
+			fmt.Fprintf(os.Stderr, "provide error: %v\n", err)
+			os.Exit(1)
+		}
+
+		// fetch on B
+		blk, err := bsEngB.GetBlock(ctx, cidKey)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "get block error: %v\n", err)
+			os.Exit(1)
+		}
+		outPath := filepath.Join(dirB, filepath.Base(args[0]))
+		if err := os.WriteFile(outPath, blk.RawData(), 0644); err != nil {
+			fmt.Fprintf(os.Stderr, "write file error: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Println("Demo completed. Node B stored file at", outPath)
 	},
 }

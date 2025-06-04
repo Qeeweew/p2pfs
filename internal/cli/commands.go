@@ -22,6 +22,7 @@ import (
 	"p2pfs/internal/datastore"
 	"p2pfs/internal/p2p"
 	"p2pfs/internal/routing"
+	"github.com/multiformats/go-multiaddr"
 )
 
 // RootCmd is the base command for the p2pfs CLI.
@@ -73,6 +74,22 @@ var serveCmd = &cobra.Command{
 		defer ds.Close()
 		bs := blockstore.NewBboltBlockstore(ds)
 		defer bs.Close()
+
+		// initialize P2P host, DHT, and Bitswap engine
+		host, err := p2p.NewHost(context.Background(), 0)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "failed to create host: %v\n", err)
+			os.Exit(1)
+		}
+		dhtEngine, err := routing.NewKademliaDHT(context.Background(), host)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "failed to create dht: %v\n", err)
+			os.Exit(1)
+		}
+		if err := dhtEngine.Bootstrap(context.Background()); err != nil {
+			fmt.Fprintf(os.Stderr, "dht bootstrap warning: %v\n", err)
+		}
+		bsEngine := bitswap.NewBitswap(host, dhtEngine, bs)
 
 		mux := http.NewServeMux()
 		mux.Handle("/", http.FileServer(http.Dir("web")))
@@ -147,6 +164,47 @@ var serveCmd = &cobra.Command{
 			}
 			w.Header().Set("Content-Type", "application/json")
 			json.NewEncoder(w).Encode(links)
+		})
+
+		// P2P connect endpoint
+		mux.HandleFunc("/api/connect", func(w http.ResponseWriter, r *http.Request) {
+			addrStr := r.URL.Query().Get("addr")
+			if addrStr == "" {
+				http.Error(w, "addr query param required", http.StatusBadRequest)
+				return
+			}
+			maddr, err := multiaddr.NewMultiaddr(addrStr)
+			if err != nil {
+				http.Error(w, "invalid multiaddr", http.StatusBadRequest)
+				return
+			}
+			info, err := peer.AddrInfoFromP2pAddr(maddr)
+			if err != nil {
+				http.Error(w, "invalid peer addr", http.StatusBadRequest)
+				return
+			}
+			if err := host.Connect(context.Background(), *info); err != nil {
+				http.Error(w, "connect failed: "+err.Error(), http.StatusInternalServerError)
+				return
+			}
+			json.NewEncoder(w).Encode(map[string]string{"status": "connected"})
+		})
+
+		// P2P fetch endpoint via Bitswap
+		mux.HandleFunc("/api/fetch", func(w http.ResponseWriter, r *http.Request) {
+			cidStr := r.URL.Query().Get("cid")
+			cidKey, err := cid.Parse(cidStr)
+			if err != nil {
+				http.Error(w, "invalid cid", http.StatusBadRequest)
+				return
+			}
+			blk, err := bsEngine.GetBlock(context.Background(), cidKey)
+			if err != nil {
+				http.Error(w, "fetch error: "+err.Error(), http.StatusInternalServerError)
+				return
+			}
+			w.Header().Set("Content-Type", "application/octet-stream")
+			w.Write(blk.RawData())
 		})
 
 		if err := http.ListenAndServe(":8080", mux); err != nil {

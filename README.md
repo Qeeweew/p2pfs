@@ -88,7 +88,13 @@ To launch a simple web UI:
 2. 在浏览器中打开：  
    http://localhost:8080/
 
-服务器会在 `web/` 目录下提供静态页面（`index.html`），并通过 `/api/...` 路由调用 CLI 底层功能。
+服务器会在 `web/` 目录下提供静态页面（`index.html`)，并通过 `/api/...` 路由调用 CLI 底层功能。
+
+Connect Peer
+
+在 “Connect Peer” 输入框中输入目标节点的多地址，例如：  
+/​ip4/127.0.0.1/tcp/8080/p2p/QmPeerID  
+然后点击 “Connect” 按钮，以连接到该节点。
 
 ## TODO
 

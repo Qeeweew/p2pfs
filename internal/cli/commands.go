@@ -143,6 +143,7 @@ var serveCmd = &cobra.Command{
 			for i, link := range node.Links() {
 				links[i] = map[string]string{"name": link.Name, "cid": link.Cid.String()}
 			}
+			w.Header().Set("Content-Type", "application/json")
 			json.NewEncoder(w).Encode(links)
 		})
 

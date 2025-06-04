@@ -23,6 +23,7 @@ import (
 	"p2pfs/internal/datastore"
 	"p2pfs/internal/p2p"
 	"p2pfs/internal/routing"
+	"time"
 	"github.com/multiformats/go-multiaddr"
 )
 
@@ -192,7 +193,9 @@ var serveCmd = &cobra.Command{
 				http.Error(w, "invalid peer addr", http.StatusBadRequest)
 				return
 			}
-			if err := host.Connect(context.Background(), *info); err != nil {
+			ctxDial, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+			defer cancel()
+			if err := host.Connect(ctxDial, *info); err != nil {
 				http.Error(w, "connect failed: "+err.Error(), http.StatusInternalServerError)
 				return
 			}

@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 
 	"github.com/ipfs/go-cid"
+	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/spf13/cobra"
-	"github.com/libp2p/go-libp2p-core/peer"
 
 	"p2pfs/internal/bitswap"
 	"p2pfs/internal/blockstore"

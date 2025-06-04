@@ -66,10 +66,19 @@
 
         // Connect Peer
         document.getElementById('connectBtn').addEventListener('click', async () => {
-            const addr = document.getElementById('addrInput').value;
-            const res = await fetch('/api/connect?addr=' + encodeURIComponent(addr));
-            const data = await res.json();
-            document.getElementById('connectResult').innerText = 'Status: ' + (data.status || 'error');
+            try {
+                const addr = document.getElementById('addrInput').value;
+                const res = await fetch('/api/connect?addr=' + encodeURIComponent(addr));
+                if (!res.ok) {
+                    const errText = await res.text();
+                    throw new Error(errText);
+                }
+                const data = await res.json();
+                document.getElementById('connectResult').innerText = 'Status: ' + data.status;
+            } catch (err) {
+                document.getElementById('connectResult').innerText = 'Error: ' + err.message;
+                console.error(err);
+            }
         });
 
         // Fetch Block

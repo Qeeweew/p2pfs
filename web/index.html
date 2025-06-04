@@ -39,6 +39,7 @@
             const res = await fetch('/api/add', { method: 'POST', body: form });
             const data = await res.json();
             document.getElementById('cidResult').innerText = 'CID: ' + data.cid;
+            await loadShared();
         });
 
         document.getElementById('catBtn').addEventListener('click', async () => {

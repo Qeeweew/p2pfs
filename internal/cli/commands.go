@@ -257,6 +257,12 @@ var serveCmd = &cobra.Command{
 			w.Write(blk.RawData())
 		})
 
+		// Shared files listing
+		mux.HandleFunc("/api/shared", func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(sharedFiles)
+		})
+
 		if err := http.ListenAndServe(fmt.Sprintf(":%d", servePort), mux); err != nil {
 			fmt.Fprintf(os.Stderr, "server error: %v\n", err)
 			os.Exit(1)

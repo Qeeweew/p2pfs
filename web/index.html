@@ -31,6 +31,7 @@
         <!-- List Links section removed -->
     </div>
     <script>
+        let sharedMeta = {};
         document.getElementById('addBtn').addEventListener('click', async () => {
             const fileInput = document.getElementById('fileInput');
             const file = fileInput.files[0];
@@ -62,6 +63,7 @@
                 a.download = filename;
                 a.click();
                 URL.revokeObjectURL(url);
+                loadShared();
             };
         });
 
@@ -103,6 +105,7 @@
         async function loadShared() {
             const res = await fetch('/api/shared');
             const files = await res.json();
+            sharedMeta = files;
             const list = document.getElementById('sharedList');
             list.innerHTML = '';
             for (const [name, cid] of Object.entries(files)) {

@@ -90,6 +90,13 @@ To launch a simple web UI:
 
 服务器会在 `web/` 目录下提供静态页面（`index.html`)，并通过 `/api/...` 路由调用 CLI 底层功能。
 
+启动服务后，控制台会打印出本节点的 Peer ID 与多地址，例如：
+```
+Node ID: QmYourPeerID
+Node address: /ip4/0.0.0.0/tcp/8080/p2p/QmYourPeerID
+```
+可将上述多地址复制到 “Connect Peer” 输入框，以连接到该节点。
+
 Connect Peer
 
 在 “Connect Peer” 输入框中输入目标节点的多地址，例如：  

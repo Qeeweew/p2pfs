@@ -90,6 +90,11 @@ var serveCmd = &cobra.Command{
 			fmt.Fprintf(os.Stderr, "dht bootstrap warning: %v\n", err)
 		}
 		bsEngine := bitswap.NewBitswap(host, dhtEngine, bs)
+		// print this node's Peer ID and multiaddrs for P2P connections
+		fmt.Println("Node ID:", host.ID().String())
+		for _, addr := range host.Addrs() {
+			fmt.Printf("Node address: %s/p2p/%s\n", addr.String(), host.ID().String())
+		}
 
 		mux := http.NewServeMux()
 		mux.Handle("/", http.FileServer(http.Dir("web")))

@@ -39,10 +39,19 @@
         });
 
         document.getElementById('lsBtn').addEventListener('click', async () => {
-            const cid = document.getElementById('lsCidInput').value;
-            const res = await fetch('/api/ls?cid=' + cid);
-            const data = await res.json();
-            document.getElementById('lsResult').innerText = JSON.stringify(data, null, 2);
+            try {
+                const cid = document.getElementById('lsCidInput').value;
+                const res = await fetch('/api/ls?cid=' + cid);
+                if (!res.ok) {
+                    const errText = await res.text();
+                    throw new Error(errText);
+                }
+                const data = await res.json();
+                document.getElementById('lsResult').innerText = JSON.stringify(data, null, 2);
+            } catch (err) {
+                document.getElementById('lsResult').innerText = 'Error: ' + err.message;
+                console.error(err);
+            }
         });
     </script>
 </body>

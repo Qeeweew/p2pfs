@@ -49,9 +49,14 @@
             const blob = new Blob([text], { type: 'application/octet-stream' });
             const url = URL.createObjectURL(blob);
             downloadBtn.onclick = () => {
+                const defaultName = cid + ".bin";
+                const filename = prompt("Enter file name", defaultName);
+                if (!filename) {
+                    return;
+                }
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = cid + ".bin";
+                a.download = filename;
                 a.click();
                 URL.revokeObjectURL(url);
             };

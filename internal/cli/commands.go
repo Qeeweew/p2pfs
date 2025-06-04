@@ -135,7 +135,6 @@ var serveCmd = &cobra.Command{
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
-			var mnode merkledag.Node
 			mnode, err := merkledag.DecodeProtobuf(blk.RawData())
 			if err != nil {
 				mnode = merkledag.NewRawNode(blk.RawData())

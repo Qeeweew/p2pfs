@@ -51,7 +51,7 @@
             downloadBtn.onclick = () => {
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = cid;
+                a.download = cid + ".bin";
                 a.click();
                 URL.revokeObjectURL(url);
             };

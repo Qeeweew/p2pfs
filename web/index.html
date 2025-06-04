@@ -26,6 +26,8 @@
         <button id="fetchBtn">Fetch</button>
         <pre id="fetchResult"></pre>
 
+        <h2>Shared Files</h2>
+        <ul id="sharedList"></ul>
         <!-- List Links section removed -->
     </div>
     <script>
@@ -94,6 +96,35 @@
             const text = await blob.text();
             document.getElementById('fetchResult').innerText = text;
         });
+
+        // Load shared files
+        async function loadShared() {
+            const res = await fetch('/api/shared');
+            const files = await res.json();
+            const list = document.getElementById('sharedList');
+            list.innerHTML = '';
+            for (const [name, cid] of Object.entries(files)) {
+                const li = document.createElement('li');
+                const btn = document.createElement('button');
+                btn.textContent = 'Download';
+                btn.onclick = () => {
+                    fetch(`/api/cat?cid=${cid}`)
+                      .then(r => r.blob())
+                      .then(blob => {
+                          const url = URL.createObjectURL(blob);
+                          const a = document.createElement('a');
+                          a.href = url;
+                          a.download = name;
+                          a.click();
+                          URL.revokeObjectURL(url);
+                      });
+                };
+                li.innerText = `${name} (` + cid + `) `;
+                li.appendChild(btn);
+                list.appendChild(li);
+            }
+        }
+        loadShared();
 
     </script>
 </body>

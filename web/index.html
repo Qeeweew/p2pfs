@@ -15,6 +15,7 @@
         <input type="text" id="cidInput" placeholder="CID" />
         <button id="catBtn">Cat</button>
         <pre id="catResult"></pre>
+        <button id="downloadBtn" style="display:none;">Download</button>
         <h2>Connect Peer</h2>
         <input type="text" id="addrInput" placeholder="Multiaddr" />
         <button id="connectBtn">Connect</button>
@@ -25,10 +26,7 @@
         <button id="fetchBtn">Fetch</button>
         <pre id="fetchResult"></pre>
 
-        <h2>List Links</h2>
-        <input type="text" id="lsCidInput" placeholder="CID" />
-        <button id="lsBtn">LS</button>
-        <pre id="lsResult"></pre>
+        <!-- List Links section removed -->
     </div>
     <script>
         document.getElementById('addBtn').addEventListener('click', async () => {
@@ -46,6 +44,17 @@
             const res = await fetch('/api/cat?cid=' + cid);
             const text = await res.text();
             document.getElementById('catResult').innerText = text;
+            const downloadBtn = document.getElementById('downloadBtn');
+            downloadBtn.style.display = 'inline';
+            const blob = new Blob([text], { type: 'application/octet-stream' });
+            const url = URL.createObjectURL(blob);
+            downloadBtn.onclick = () => {
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = cid;
+                a.click();
+                URL.revokeObjectURL(url);
+            };
         });
 
         document.getElementById('lsBtn').addEventListener('click', async () => {

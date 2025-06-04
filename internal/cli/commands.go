@@ -103,25 +103,10 @@ var serveCmd = &cobra.Command{
 
 		mux := http.NewServeMux()
 
-		sharedDir := "shared"
-		if err := os.MkdirAll(sharedDir, 0755); err != nil {
-		    log.Printf("failed to create shared folder: %v", err)
-		}
+		metadataBucket := "metadata"
 		sharedFiles := make(map[string]string)
-		// preload existing shared files
-		if files, err := os.ReadDir(sharedDir); err == nil {
-		    for _, f := range files {
-		        if f.IsDir() {
-		            continue
-		        }
-		        fp := filepath.Join(sharedDir, f.Name())
-		        cidKey, err := importer.ImportFile(context.Background(), fp, bs)
-		        if err != nil {
-		            log.Printf("failed to import shared file %s: %v", fp, err)
-		            continue
-		        }
-		        sharedFiles[f.Name()] = cidKey.String()
-		    }
+		if data, err := ds.Get(context.Background(), metadataBucket, []byte("shared_meta")); err == nil {
+		    json.Unmarshal(data, &sharedFiles)
 		}
 		mux.Handle("/", http.FileServer(http.Dir("web")))
 
@@ -153,22 +138,12 @@ var serveCmd = &cobra.Command{
 				return
 			}
 			json.NewEncoder(w).Encode(map[string]string{"cid": cidKey.String()})
-			// save uploaded file to shared folder
-			dstPath := filepath.Join(sharedDir, fh.Filename)
-			if _, err := tmp.Seek(0, io.SeekStart); err != nil {
-			    log.Printf("failed to seek temp file: %v", err)
-			} else {
-			    dst, err := os.Create(dstPath)
-			    if err != nil {
-			        log.Printf("failed to create shared file: %v", err)
-			    } else {
-			        if _, err := io.Copy(dst, tmp); err != nil {
-			            log.Printf("failed to copy to shared file: %v", err)
-			        } else {
-			            sharedFiles[fh.Filename] = cidKey.String()
-			        }
-			        dst.Close()
-			    }
+			// record uploaded file metadata and persist
+			sharedFiles[fh.Filename] = cidKey.String()
+			if metaBytes, err := json.Marshal(sharedFiles); err != nil {
+			    log.Printf("failed to marshal shared metadata: %v", err)
+			} else if err := ds.Put(context.Background(), metadataBucket, []byte("shared_meta"), metaBytes); err != nil {
+			    log.Printf("failed to persist shared metadata: %v", err)
 			}
 		})
 

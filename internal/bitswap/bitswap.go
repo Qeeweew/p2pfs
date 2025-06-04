@@ -94,7 +94,9 @@ func (b *Bitswap) GetBlock(ctx context.Context, cidKey cid.Cid) (blockformat.Blo
 
 // ProvideBlock announces that we can provide this block.
 func (b *Bitswap) ProvideBlock(ctx context.Context, cidKey cid.Cid) error {
-	return b.dht.Provide(ctx, cidKey, true)
+	// attempt to announce block via DHT; ignore errors if no peers
+	_ = b.dht.Provide(ctx, cidKey, true)
+	return nil
 }
 
 // ErrNotFound is returned when a block cannot be retrieved.

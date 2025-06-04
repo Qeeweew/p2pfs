@@ -63,6 +63,29 @@
                 console.error(err);
             }
         });
+
+        // Connect Peer
+        document.getElementById('connectBtn').addEventListener('click', async () => {
+            const addr = document.getElementById('addrInput').value;
+            const res = await fetch('/api/connect?addr=' + encodeURIComponent(addr));
+            const data = await res.json();
+            document.getElementById('connectResult').innerText = 'Status: ' + (data.status || 'error');
+        });
+
+        // Fetch Block
+        document.getElementById('fetchBtn').addEventListener('click', async () => {
+            const cid = document.getElementById('fetchCidInput').value;
+            const res = await fetch('/api/fetch?cid=' + cid);
+            if (!res.ok) {
+                const errText = await res.text();
+                document.getElementById('fetchResult').innerText = 'Error: ' + errText;
+                return;
+            }
+            const blob = await res.blob();
+            const text = await blob.text();
+            document.getElementById('fetchResult').innerText = text;
+        });
+
     </script>
 </body>
 </html>

@@ -1,8 +1,50 @@
 # P2PFS 实验报告
 
-## 1. 项目原理与架构
+## 1. P2P 与 IPFS 技术背景
 
-### 1.1 核心原理
+### 1.1 P2P 网络技术
+点对点（P2P）网络是一种分布式架构，节点之间直接通信共享资源，无需中央服务器。相比客户端-服务器模型，P2P具有：
+- **去中心化**：无单点故障
+- **可扩展性**：节点越多，网络能力越强
+- **资源利用率**：节点贡献带宽和存储
+
+```mermaid
+graph LR
+    A[节点A] -->|直接连接| B[节点B]
+    A --> C[节点C]
+    B --> D[节点D]
+    C --> D
+```
+
+### 1.2 IPFS 架构原理
+星际文件系统（IPFS）是典型的P2P文件系统，核心组件包括：
+1. **内容寻址**：通过CID唯一标识内容
+2. **Merkle-DAG**：文件组织结构
+3. **分布式哈希表（DHT）**：内容路由
+4. **Bitswap协议**：数据块交换
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant IPFS
+    participant Network
+    
+    User->>IPFS: 添加文件
+    IPFS->>IPFS: 分块+生成CID
+    IPFS->>DHT: 广播CID
+    IPFS->>Network: 存储数据块
+    User->>IPFS: 请求CID
+    IPFS->>DHT: 查找提供者
+    DHT-->>IPFS: 返回节点列表
+    IPFS->>Bitswap: 请求数据块
+    Bitswap->>Network: 获取数据
+    Network-->>IPFS: 返回数据块
+    IPFS-->>User: 组合文件
+```
+
+## 2. 项目原理与架构
+
+### 2.1 核心原理
 
 #### 内容寻址 (Content Addressing)
 - 每个数据块通过 multihash 计算生成唯一 CID
@@ -26,7 +68,7 @@ graph TD
     SubDir --> File3[文件块 CID3]
 ```
 
-### 1.2 系统架构
+### 2.2 系统架构
 
 ```mermaid
 graph LR
@@ -46,9 +88,9 @@ graph LR
 5. **Kademlia DHT**：内容路由
 6. **Bitswap**：数据块交换协议
 
-## 2. 关键组件与代码实现
+## 3. 关键组件与代码实现
 
-### 2.1 持久化存储 (Datastore)
+### 3.1 持久化存储 (Datastore)
 
 ```go
 // internal/datastore/bbolt_datastore.go - BBolt 实现
@@ -65,7 +107,7 @@ func (b *bboltDatastore) Put(ctx context.Context, bucket string, key []byte, val
 - Bucket 组织不同数据类型
 - 支持快速随机读写
 
-### 2.2 块存储 (Blockstore)
+### 3.2 块存储 (Blockstore)
 
 ```go
 // internal/blockstore/bbolt_blockstore.go - 块存取
@@ -81,7 +123,7 @@ func (b *BboltBlockstore) Put(ctx context.Context, block blockformat.Block) erro
 - 自动处理数据序列化
 - 支持存在性检查 (Has 方法)
 
-### 2.3 Bitswap 协议
+### 3.3 Bitswap 协议
 
 ```go
 // internal/bitswap/bitswap.go - 块交换流程
@@ -113,7 +155,7 @@ func (b *Bitswap) GetBlock(ctx context.Context, cidKey cid.Cid) (blockformat.Blo
 3. 建立 P2P 连接获取数据
 4. 缓存数据到本地
 
-### 2.4 DHT 路由
+### 3.4 DHT 路由
 
 ```go
 // internal/routing/kademlia.go - 查找提供者
@@ -132,7 +174,7 @@ func (k *KademliaDHT) FindProviders(ctx context.Context, c cid.Cid, max int) ([]
 - 支持结果数量限制
 - 返回对等节点地址信息
 
-### 2.5 文件导入导出
+### 3.5 文件导入导出
 
 ```go
 // internal/dag/importer/importer.go - 文件导入
@@ -153,9 +195,9 @@ func ExportFile(ctx context.Context, root cid.Cid, bs blockstore.Blockstore, pat
 }
 ```
 
-## 3. 数据流图
+## 4. 数据流图
 
-### 3.1 文件添加流程
+### 4.1 文件添加流程
 ```mermaid
 sequenceDiagram
     participant CLI as 命令行
@@ -171,7 +213,7 @@ sequenceDiagram
     DHT-->>CLI: 返回文件CID
 ```
 
-### 3.2 文件获取流程
+### 4.2 文件获取流程
 ```mermaid
 sequenceDiagram
     participant CLI as 命令行
@@ -189,9 +231,9 @@ sequenceDiagram
     BS-->>CLI: 返回文件内容
 ```
 
-## 4. 使用示例
+## 5. 使用示例
 
-### 4.1 命令行操作
+### 5.1 命令行操作
 ```bash
 # 添加文件并获取 CID
 ./p2pfs add example.txt
@@ -203,7 +245,7 @@ sequenceDiagram
 ./p2pfs ls QmABC...
 ```
 
-### 4.2 节点操作
+### 5.2 节点操作
 ```bash
 # 启动服务节点
 ./p2pfs serve --port 8080
@@ -212,7 +254,7 @@ sequenceDiagram
 ./p2pfs replicate example.txt http://peer:8080
 ```
 
-## 5. 总结
+## 6. 总结
 本项目实现了分布式文件系统的核心功能：
 - 内容寻址保证数据完整性
 - Merkle-DAG 支持高效文件组织
